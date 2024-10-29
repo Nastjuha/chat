@@ -5,6 +5,7 @@ const client = new Socket("ws://172.26.144.1:8000"); // 8000 - port that server 
 
 const Chat = ({ userName }) => {
   const [myMessage, setMyMessage] = useState("");
+  const [messages, setMessages] = useState([]);
 
   const onSend = () => {
     client.send(
@@ -23,7 +24,19 @@ const Chat = ({ userName }) => {
     };
     client.onmessage = (message) => {
       // Handle incoming messages here
-      console.log("Received message:", message.data);
+      //console.log("Received message:", message.data);
+      const data = JSON.parse(message.data);
+      // we need messages data state for saving data from received message above
+      // {"type":"message","message":"huhuh","userName":"2nd user"}
+
+      // adding current message to the list we have
+      setMessages((message) => [
+        ...messages,
+        {
+          message: data.message,
+          userName: data.userName,
+        },
+      ]);
     };
     client.onerror = (error) => {
       console.error("WebSocket Error:", error);
@@ -33,14 +46,29 @@ const Chat = ({ userName }) => {
     };
 
     // Cleanup on component unmount
-    return () => {
-      client.close();
-    };
+    // return () => {
+    //   client.close();
+    // };
   }, []);
 
   return (
     <>
       <div className="title">Socket Chat: {userName}</div>
+      <div className="messages">
+        {messages.map((message, key) => (
+          <div
+            key={key}
+            className={`message ${
+              userName === message.userName ? "flex-end" : "flex-start" // if the userName in local is the same as user, that provided a message now (message.userName)
+            }`}
+          >
+            <section>{message.userName[0].toUpperCase()}</section>
+            <h4>{message.userName + ":"}</h4>
+            <p>{message.message}</p>
+          </div>
+        ))}
+      </div>
+
       <div className="bottom form">
         <input
           type="myMessage"
